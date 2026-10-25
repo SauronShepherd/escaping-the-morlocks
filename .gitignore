@@ -5,3 +5,4 @@ __pycache__/
 .venv-packages/
 .spark-warehouse/
 metastore_db/
+*.log

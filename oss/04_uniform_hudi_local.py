@@ -29,6 +29,7 @@ def build_spark():
         .appName("EscapingTheMorlocks-OSS-UniForm-Hudi")
         .master("local[2]")
         .config("spark.ui.enabled", "false")
+        .config("spark.jars.ivySettings", (Path(__file__).resolve().parents[1] / "ivysettings.xml").as_uri())
         .config("spark.default.parallelism", "2")
         .config("spark.sql.shuffle.partitions", "2")
         .config("spark.jars.excludes", "org.xerial.snappy:snappy-java,com.github.luben:zstd-jni")

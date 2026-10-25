@@ -2,30 +2,34 @@
 
 Date: 2026-10-25
 
-## Checks completed
+## Runtime evidence collected in WSL2 Ubuntu
 
-- Both Databricks notebooks parse as notebook JSON; all Python code cells compile; both notebooks have no saved execution outputs.
-- The setup notebook uses the explicitly named `morlocks_time_travel_lab` schema and only drops its two named lab tables. It does not drop the schema.
+Environment: Ubuntu under WSL2, Python 3.12.3, Java 21.0.12, PySpark 3.5.9, Delta Lake 3.3.2. Spark ran locally in `local[2]`; Maven dependencies resolved through the repository's `ivysettings.xml` using Maven Central.
+
+- `databricks/00_setup_and_evidence.ipynb`: all Python code cells executed successfully in a local OSS Spark session with a `display()` shim. The setup created the named `morlocks_time_travel_lab` schema and its two lab tables. It did not require Databricks APIs for the Spark/Delta logic.
+- `databricks/01_three_clocks.ipynb`: all Python code cells executed in the same OSS Spark session. Baseline Delta version 0 did not contain late customer 999; version 1 did. Its August 10 event timestamp preceded the October 25 commit timestamp and query time. The evidence ledger captured the result.
+- `oss/00_delta_three_clocks.py`: executed on OSS Spark/Delta. Baseline version 0 had no late row; version 1 contained it. The printed history showed two WRITE commits.
+- `oss/04_uniform_hudi_local.py`: executed on OSS Spark 3.5.9 + Delta 3.3.2 + Hudi 0.15.0. Delta version `0 -> 1` and Hudi instant `20261025213939654 -> 20261025214054011` were distinct coordinates. Delta historical rows = 1, Hudi historical rows = 1, Hudi latest rows = 2. The script ended with `PASS`.
+- Both Databricks notebooks parse as notebook JSON, and all Python code cells compile. They have no saved outputs; the successful execution above was an external local run, not a Databricks notebook attachment/session.
 - Both OSS Python scripts pass Python AST parsing.
-- The README describes how to run the OSS path, the Databricks-only path, version boundaries, safety, and experiment conclusions.
-- Browser QA of the book confirmed: desktop title and cover render; the left leaf and format bookmarks are hidden on the cover; turning forward shows the song quote on the right; turning back restores the cover; the chapter index exposes ten sections; and Iceberg, Hudi, XTable and UniForm bookmarks reached their corresponding headings without page errors.
-- Browser QA found a real Delta bookmark bug: its heading could land on the left leaf while the reader rounded to the preceding spread. A shared page normalization fix now covers bookmarks, deep links and resize. **The corrected Delta jump still needs a fresh browser retest.**
 
-## Runtime checks still outstanding
+## Interactive article review
 
-- The complete Astro build is blocked by content validation errors in unrelated drafts: `draft-metric-views-are-not-metrics-with-a-view.md` (tag count and image slug) and `from-dusk-till-dawn-the-naughty-cluster.md` (invalid reading time). The dev server initially served the interactive book at HTTP 200, but stopped responding after the navigation change; final browser QA and mobile viewport checks remain outstanding.
-- OSS Spark execution is not yet certified. WSL2 has Python 3.12 and Java 21 but lacks `python3-venv`; apt stalled. Windows Python has PySpark, while installing Delta Spark triggered a lengthy PySpark wheel build that was stopped before completion.
-- The Databricks notebooks need a live Databricks runtime and Unity Catalog permissions. They are syntax-checked, not executed.
-- XTable's Scala exercise needs a compatible Spark 3.4/3.5, Scala, Hudi, Iceberg, Delta and XTable classpath. No such prepared runtime was available, so it is not executed.
+- Desktop book QA confirmed the cover and page-turn controls, quote spread, hidden cover bookmarks, and ten-section index. Iceberg, Hudi, XTable and UniForm bookmarks reached the intended sections in the earlier pass.
+- QA found and fixed a Delta bookmark spread-normalization bug shared by marker/deep-link/resize navigation. The corrected Delta bookmark still needs a fresh browser retest.
+- The complete Astro build remains blocked by unrelated pre-existing draft validation errors in `draft-metric-views-are-not-metrics-with-a-view.md` (tag count and image slug) and `from-dusk-till-dawn-the-naughty-cluster.md` (invalid reading time). A clean final browser/mobile pass should follow when the dev server/build issues are resolved.
 
-## Conclusions supported by the material
+## Not yet executed
+
+- `oss/01_xtable_spark_runtime.scala`: still requires a compatible XTable, Spark/Scala, Hudi, Iceberg and Delta classpath. It is not claimed as runtime-tested.
+- `oss/02_delta_uniform.md` and `oss/03_native_coordinates.md` are procedure/reference notes, not executable scripts.
+- The two notebooks ran against local OSS Spark + Delta, not a live Databricks Runtime or Unity Catalog. Databricks-specific catalog permissions and service behavior remain unverified.
+- This run is a local reproducibility check, not production certification. In particular, the UniForm Hudi route is a preview path; validate supported versions and behavior before production use.
+
+## Evidence-backed conclusions
 
 1. Event timestamps are business data; Delta versions, Iceberg snapshot IDs and Hudi instants identify native table-history states.
-2. UniForm is a Delta-owned write path that generates secondary metadata. Its OSS Hudi route is explicitly marked preview; the Iceberg path needs a properly initialized Hive Metastore.
+2. UniForm is a Delta-owned write path that generates secondary metadata. Its OSS Hudi route is preview; the Iceberg path needs a properly initialized Hive Metastore.
 3. XTable synchronizes supported metadata between formats. It is neither a fourth native table format nor a cross-format transaction coordinator.
 4. Translated format coordinates must be recorded independently; they are not matching counters.
-5. Historical queries require both readable metadata and retained data files. Neither mechanism substitutes for independent backups.
-
-## To finish runtime certification
-
-Use Python 3.10+ and Java 17 with the pinned requirements in a clean venv, then run `python oss/04_uniform_hudi_local.py`. Run the Databricks notebooks in order only on an isolated Unity Catalog-enabled workspace. Run the XTable Scala lab with the compatibility matrix from Apache XTable 0.4.0. Record actual command output and exact runtime versions before claiming those labs passed.
+5. Historical queries require readable metadata and retained data files. Neither mechanism substitutes for independent backups.
