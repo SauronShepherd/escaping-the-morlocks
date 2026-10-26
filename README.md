@@ -20,7 +20,7 @@ For XTable, use Java 17 and create a second Spark 3.4 compatible Python environm
 | `notebooks/04_xtable_interoperability.ipynb` | Hudi COW source synchronized to an Iceberg reader; matching XTable 0.4/Hudi 0.14 compatibility stack |
 | `notebooks/05_uniform_interoperability.ipynb` | Delta writer with generated Hudi preview view; historical-read and checksum diagnostic; Iceberg catalog caveat |
 
-The shared native scenario has three states: Ada + Babbage (2 rows); upsert Babbage and append Larry with an older event_time (3); delete Ada (2). Expected counts are **2 → 3 → 2**. The notebooks compute canonical row checksums as well as counts.
+The shared native scenario has three states: Ada + Babbage (2 rows); upsert Babbage and append Larry with an older event_time (3); delete Ada (2). Expected counts are **2 → 3 → 2**. The notebooks compute canonical row checksums as well as counts. Current UniForm/Hudi checks are intentionally diagnostic: the pinned OSS preview currently returns null data fields through Hudi, despite matching row counts, so the lab reports a value-check failure instead of claiming equivalence.
 
 ## Reading the results
 
