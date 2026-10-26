@@ -33,3 +33,4 @@ Environment: Ubuntu under WSL2, Python 3.12.3, Java 21.0.12, PySpark 3.5.9, Delt
 3. XTable synchronizes supported metadata between formats. It is neither a fourth native table format nor a cross-format transaction coordinator.
 4. Translated format coordinates must be recorded independently; they are not matching counters.
 5. Historical queries require readable metadata and retained data files. Neither mechanism substitutes for independent backups.
+
